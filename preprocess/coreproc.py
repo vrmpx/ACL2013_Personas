@@ -37,7 +37,7 @@ def parse_docrows(rows):
 def process_entity(ent, sents):
     headinds = [(m['sentence'],m['head']) for m in ent['mentions']]
     headlemmas = [sents[s]['lemma'][t] for s,t in headinds]
-    mention_texts = [ u' '.join([sents[m['sentence']]['word'][t] for t in range(m['start'],m['end'])]) for m in ent['mentions']]
+    mention_texts = [ ' '.join([sents[m['sentence']]['word'][t] for t in range(m['start'],m['end'])]) for m in ent['mentions']]
 
     sstags = [sents[s]['sstag'][t].split('-')[-1] for s,t in headinds]
     ssc = uniq_c(sstags)
@@ -80,7 +80,7 @@ def is_verb(sent, t):
 def entity_summaries(sents,ents):
     for ent in ents:
         del ent['mentions'], ent['first_mention']
-        print "{}\t{}".format(ent['id'], json.dumps(ent))
+        print("{}\t{}".format(ent['id'], json.dumps(ent)))
 
 def decide_canonical_mention(ent, sents):
     good_texts = Counter()
@@ -89,7 +89,7 @@ def decide_canonical_mention(ent, sents):
     for m in ent['mentions']:
         sent = sents[m['sentence']]
         tokinds = range(m['start'], m['end'])
-        text = u' '.join(sent['word'][t] for t in tokinds).lower()
+        text = ' '.join(sent['word'][t] for t in tokinds).lower()
         # print [sent['pos'][t] for t in tokinds], '\t|||\t', text
         if all(is_pronoun(sent, t) for t in tokinds):
             really_fallbacks[text] += 1
@@ -106,20 +106,20 @@ def decide_canonical_mention(ent, sents):
                 tokinds = tokinds[:-1]
         if not tokinds: continue
 
-        text = u' '.join(sent['word'][t] for t in tokinds).lower()
+        text = ' '.join(sent['word'][t] for t in tokinds).lower()
         good_texts[text] += 1
     if good_texts:
-        best = sorted(good_texts.items(), key=lambda (text,c): (-c, -len(text.split()))
+        best = sorted(good_texts.items(), key=lambda text_c: (-text_c[1], -len(text_c[0].split()))
                 )[0][0]
     elif fallback_texts:
-        best = sorted(fallback_texts.items(), key=lambda (text,c): (-c, len(text.split()))
+        best = sorted(fallback_texts.items(), key=lambda text_c: (-text_c[1], len(text_c[0].split()))
                 )[0][0]
     elif really_fallbacks:
-        best = sorted(really_fallbacks.items(), key=lambda (text,c): (-c, -len(text.split()))
+        best = sorted(really_fallbacks.items(), key=lambda text_c: (-text_c[1], -len(text_c[0].split()))
                 )[0][0]
     elif len(ent['mentions']) > 0:
         m = ent['mentions'][0]
-        best = u' '.join(sents[m['sentence']]['word'][t] for t in range(m['start'], m['end'])).lower()
+        best = ' '.join(sents[m['sentence']]['word'][t] for t in range(m['start'], m['end'])).lower()
     else:
         best = 'NO_TEXT'
     ent['canonical_text'] = best
@@ -153,7 +153,7 @@ def basepaths(t, sent):
     neighbors +=[('G',rel,gi) for rel,di,gi in sent['deps'] if di==t]
     return [(tpl,) for tpl in neighbors]
 
-def pathendpoint_filter((dir,rel,i)):
+def pathendpoint_filter(dir,rel,i):
     if rel=='appos': return False
     if rel.startswith('conj'): return False
     if rel=='parataxis': return False
@@ -170,7 +170,7 @@ def highlight(mention, sent):
 
 def showsent(sent):
     toks = [w for i,w in enumerate(sent['word'])]
-    return u' '.join(toks)
+    return ' '.join(toks)
 
 def filter_paths(paths):
     paths = [p for p in paths if pathendpoint_filter(p[-1])]
@@ -217,7 +217,7 @@ def extend_path_for_superobj(paths, sent):
             if index in seen_nodes: continue
             direction = 'U' if di==last else 'D'
             new_pathpoint = (direction,rel,index)
-            if not pathendpoint_filter(new_pathpoint): continue
+            if not pathendpoint_filter(direction, rel, index): continue
             yield path + [new_pathpoint]
 
 def get_superobj_paths(seedpath, sent, sizelim=7):
@@ -242,7 +242,7 @@ def new_stuff(sent, ents, snum):
     for s in range(T):
         ent = sent['entities'][s]
         if ent is None: continue
-        print 'ENTMENT',ent,sent['word'][s]
+        print('ENTMENT',ent,sent['word'][s])
 
         govs   = [(rel,gi) for rel,di,gi in sent['deps'] if di==s]
         childs = [(rel,di) for rel,di,gi in sent['deps'] if gi==s]
@@ -259,13 +259,12 @@ def new_stuff(sent, ents, snum):
             sys.stdout.write("M.{}.{}.{}\t".format(snum, s, ind))
             # output_word = compact_json([direction, rel, sent['lemma'][ind]])
             output_word = sent['lemma'][ind]
-            print ' '.join(str(x) for x in [
-                output_word,
-                clean_sstag(sent['sstag'][s]),
-                'M:bla',
-                "E{}".format(sent['entities'][s]),
-                sent['lemma'][s]
-            ])
+            print(' '.join(str(x) for x in [
+                            output_word,
+                            clean_sstag(sent['sstag'][s]),
+                            'M:bla',
+                            "E{}".format(sent['entities'][s]),
+                            sent['lemma'][s]]))
 
         # print 'GOVS', [(r,sent['word'][i],sent['pos'][i]) for r,i in govs]
         # nonverb_govs = [(rel,i) for rel,i in govs if not is_verb(sent,i)]
@@ -293,12 +292,12 @@ def new_stuff(sent, ents, snum):
     for pairid,(agentind, patientind, verbind, pathstr) in enumerate(all_pathtuples):
         def printstr(pathside, entityind):
             sys.stdout.write("Tpair{}.{}\t".format(snum, pairid))
-            print ' '.join(str(x) for x in [
-                pathstr,
-                clean_sstag(sent['sstag'][entityind]),
-                pathside, 
-                "E{}".format(sent['entities'][entityind]),
-                sent['lemma'][entityind] ])
+            print(' '.join(str(x) for x in [
+                            pathstr,
+                            clean_sstag(sent['sstag'][entityind]),
+                            pathside, 
+                            "E{}".format(sent['entities'][entityind]),
+                            sent['lemma'][entityind] ]))
         printstr('A:bla', agentind)
         printstr('P:bla', patientind)
 
@@ -316,8 +315,6 @@ def pathtuples_with_agent(sent, agentind, agent_verbgovs):
             # print 'PATHTUPLE', sent['lemma'][s], sent['lemma'][last], pathstr
             path_tuples.append((agentind, last, path[1][2], pathstr))
     return path_tuples
-
-
 
 def compact_json(x):
     return json.dumps(x, separators=(',', ':'))
@@ -374,10 +371,10 @@ def verb_analysis(sent, ents):
         childs = set(childs)
         ## dedupe by entity. prefer later positions, therefore reverse sort here
         childs = [(rel,i, sent['entities'][i]) for rel,i in childs]
-        childs.sort(key=lambda (rel,i,e): (-i,rel,e))
+        childs.sort(key=lambda relie: (-relie[1],relie[0],relie[2]))
         childs_by_ent = {e:(rel,i,e) for rel,i,e in childs}
-        childs = childs_by_ent.values()
-        childs.sort(key=lambda (rel,i,e): (i,rel,e))
+        childs = list(childs_by_ent.values())
+        childs.sort(key=lambda relie: (relie[1],relie[0],relie[2]))
         childs = [(rel,i) for rel,i,e in childs]
         # print 'CHILDS', len(childs), childs
         agents =  [(rel,i) for rel,i in childs if is_agent_rel(rel)]
@@ -396,10 +393,10 @@ def verb_analysis(sent, ents):
                 in enumerate(itertools.product(agents,patients)):
             if arel is not None:
                 sys.stdout.write("T{}.{}.{}\t".format(sentid, verbid, pairid))
-                print eventarg_str(sent, 'A:'+arel, verbind, agent_i)
+                print(eventarg_str(sent, 'A:'+arel, verbind, agent_i))
             if prel is not None:
                 sys.stdout.write("T{}.{}.{}\t".format(sentid, verbid, pairid))
-                print eventarg_str(sent, 'P:'+prel, verbind, patient_i)
+                print(eventarg_str(sent, 'P:'+prel, verbind, patient_i))
 
 def eventarg_str(sent, rel, verbind, argind, suffix=''):
     return ' '.join(str(x) for x in [
@@ -418,7 +415,7 @@ def process_doc(sents,ents):
 def make_shortform(sents,ents):
     entity_summaries(sents,ents)
     for snum,sent in enumerate(sents):
-        print "{}\t{}".format(sent['id'], showsent(sent))
+        print("{}\t{}".format(sent['id'], showsent(sent)))
         verb_analysis(sent, ents)
         new_stuff(sent, ents, snum)
 
@@ -426,7 +423,7 @@ def main():
     for docid,rows in itertools.groupby(rowgen(), key=lambda r: r[0]):
         sents,ents = parse_docrows(rows)
         # print>>sys.stderr, docid
-        print '\n=== DOC', docid, len(sents), len(ents)
+        print('\n=== DOC', docid, len(sents), len(ents))
         process_doc(sents,ents)
         make_shortform(sents,ents)
 
