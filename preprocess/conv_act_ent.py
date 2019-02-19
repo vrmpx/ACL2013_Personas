@@ -50,14 +50,15 @@ def main(lines):
                 fbactors[id]=fbactor
 
                 mdict=info['lemma_c']
-                sorted_mdict = sorted(mdict.iteritems(), key=operator.itemgetter(1), reverse=True)
+                sorted_mdict = sorted(mdict.items(), key=operator.itemgetter(1), reverse=True)
                 count=0
 
+                # VM: F*** YOU!
                 for name,count in sorted_mdict:
                     enames[fb]=name
                     break
                 mdict=info['fulltext_c']
-                sorted_mdict = sorted(mdict.iteritems(), key=operator.itemgetter(1), reverse=True)
+                sorted_mdict = sorted(mdict.items(), key=operator.itemgetter(1), reverse=True)
                 count=0
 
                 for name,count in sorted_mdict:
@@ -65,7 +66,7 @@ def main(lines):
                     break
 
                 mdict=info['sstag_c']
-                sorted_mdict = sorted(mdict.iteritems(), key=operator.itemgetter(1), reverse=True)
+                sorted_mdict = sorted(mdict.items(), key=operator.itemgetter(1), reverse=True)
                 count=0
 
                 sstags[fb]=""
@@ -126,24 +127,24 @@ def main(lines):
         cols=key.split(":")
         entityID=cols[0]
         if counts[entityID] > 0:
-            print "%s" % key.lower(),
-    print "\t",
+            print("%s" % key.lower(), end = " ")
+    print("\t", end = " ")
     for key in patients:
         cols=key.split(":")
         entityID=cols[0]
         if counts[entityID] > 0:
-            print "%s" % key.lower(),
-    print "\t",
+            print("%s" % key.lower(), end = " ")
+    print("\t")
     for key in modifiers:
         cols=key.split(":")
         entityID=cols[0]
         if counts[entityID] > 0:
-            print "%s" % key.lower(),
+            print("%s" % key.lower(), end = " ")
 
-    print "\t",
-    print json.dumps(enames),
-    print "\t",
-    print json.dumps(fullnames)
+    print("\t", end = " ")
+    print(json.dumps(enames), end = " ")
+    print("\t", end = " ")
+    print(json.dumps(fullnames), end = " ")
     
     
     # file.close()
